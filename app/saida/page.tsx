@@ -1,24 +1,25 @@
-// app/page.tsx
+// app/saida/page.tsx
 export const dynamic = "force-dynamic";
-
 import { prisma } from "@/lib/prisma";
-import HomeClient from "@/app/_components/home/page"; 
+import SaidaForm from "./SaidaForm";
 
 export default async function Page() {
   const produtosDoBanco = await prisma.produto.findMany({
+    select: {
+      id: true,
+      nome: true,
+      volumeUnidade: true,   // BUSCANDO O VOLUME
+      unidadeMedida: true,    // BUSCANDO L ou Kg
+    },
     orderBy: { nome: 'asc' },
   });
 
-
   const produtosFormatados = produtosDoBanco.map((p) => ({
-    ...p,
     id: p.id.toString(),
-    estoqueBruto: Number(p.estoqueBruto),
+    nome: p.nome,
     volumeUnidade: Number(p.volumeUnidade),
-    itensPorCaixa: Number(p.itensPorCaixa),
-    unidadeMedida: p.unidadeMedida as 'L' | 'Kg' | 'G',
+    unidadeMedida: p.unidadeMedida
   }));
 
-
-  return <HomeClient produtosIniciais={produtosFormatados} />
+  return <SaidaForm produtos={produtosFormatados} />;
 }

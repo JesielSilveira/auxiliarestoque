@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Produto {
+  id            Int       @id @default(autoincrement())
+  nome          String
+  codigoSap     String?   @unique
+
+  // Engenharia de embalagem
+  volumeUnidade Decimal   @db.Decimal(10,3) // ex: 10.000
+  unidadeMedida String    @default("L")     // L | KG | G
+  itensPorCaixa Int       @default(1)
+
+  // saldo consolidado
+  estoqueBruto  Decimal   @default(0) @db.Decimal(10,3)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  movimentacoes Movimentacao[]
+  lotes         Lote[]
+}
+
+model Lote {
+  id              Int       @id @default(autoincrement())
+  numero          String
+  validade        DateTime
+  quantidadeLote  Decimal   @db.Decimal(10,3)
+  volumeUnidade   Decimal  @db.Decimal(10,3) @default(0)
+  produtoId       Int
+  produto         Produto   @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime  @default(now())
+}
+
+model Movimentacao {
+  id          Int       @id @default(autoincrement())
+  tipo        String    // ENTRADA | SAIDA
+  quantidade  Decimal   @db.Decimal(10,3)
+  cliente           String?
+  tipoDocumento     String?
+  dataMovimentacao  DateTime
+
+  comNota     Boolean   @default(true)
+  conciliado  Boolean   @default(false)
+
+  produtoId   Int
+  produto     Produto   @relation(fields: [produtoId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime  @default(now())
+}
